@@ -19,6 +19,16 @@ class COLOR(Enum):
     WHITE = 1
     BLACK = 2
 
+class DIR(Enum):
+    N = 0
+    NE = 1
+    E = 2
+    SE = 3
+    S = 4
+    SV = 5
+    V = 6
+    NV = 7
+
 CURRENT_PLAYING_COLOR = COLOR.WHITE
 
 window = GraphWin("CodeCup 2019 Server", WINDOW_SIZE_X, WINDOW_SIZE_Y)
@@ -111,36 +121,114 @@ def clearUI():
     cellArray[3][4].SetColor(COLOR.WHITE)
     cellArray[4][3].SetColor(COLOR.WHITE)
     cellArray[4][4].SetColor(COLOR.BLACK)
-            
+
+def advance(r, c, dir):
+    if dir == DIR.N:
+        r = r - 1
+    elif dir == DIR.NE:
+        r = r - 1
+        c = c + 1
+    elif dir == DIR.E:
+        c = c + 1
+    elif dir == DIR.SE:
+        r = r + 1
+        c = c + 1
+    elif dir == DIR.S:
+        r = r + 1
+    elif dir == DIR.SV:
+        r = r + 1
+        c = c - 1
+    elif dir == DIR.V:
+        c = c - 1
+    elif dir == DIR.NV:
+        r = r - 1
+        c = c - 1
+
+    if r < 0 or r > 7 or c < 0 or c > 7:
+        return [False, r, c]
+
+    return [True, r, c]
+
+def updateTokensInDirection(r, c, dir):
+    startR = r
+    startC = c
+
+    lastR = -1
+    lastC = -1
+
+    while advance(r, c, dir)[0]:
+        res = advance(r, c, dir)
+        newR = res[1]
+        newC = res[2]
+
+        if cellArray[newR][newC].GetColor() == CURRENT_PLAYING_COLOR:
+            lastR = newR
+            lastC = newC
+
+        r = newR
+        c = newC
+
+    allGood = True
+    if lastR != -1 and lastC != -1:
+        r = startR
+        c = startC
+
+        foundEmpty = False
+
+        while advance(r, c, dir)[0]:
+            res = advance(r, c, dir)
+            newR = res[1]
+            newC = res[2]
+
+            if cellArray[newR][newC].GetColor() == COLOR.NONE:
+                foundEmpty = True
+
+            if newR == lastR and newC == lastC:
+                if foundEmpty:
+                    allGood = False
+                break;
+
+            r = newR
+            c = newC
+
+    if lastR != -1 and lastC != -1 and allGood:
+        r = startR
+        c = startC
+
+        while advance(r, c, dir)[0]:
+            res = advance(r, c, dir)
+            newR = res[1]
+            newC = res[2]
+
+            if newR == lastR and newC == lastC:
+                return
+
+            cellArray[newR][newC].Flip()
+
+            r = newR
+            c = newC
+
 def mouseCallback(clickedPoint):
     global CURRENT_PLAYING_COLOR
     for cell in cells:
             if cell.HasBeenTouched(clickedPoint):
-                cell.SetColor(CURRENT_PLAYING_COLOR)
+                if cell.GetColor() != COLOR.NONE:
+                    return
 
                 # Move on all directions to flip the colors
                 i = cell.i
                 j = cell.j
 
-                for _i in range(i, 8):
-                    cellArray[_i][j].Flip();
-                for _i in range(0, i):
-                    cellArray[_i][j].Flip();
-                for _j in range(j, 8):
-                    cellArray[i][_j].Flip();
-                for _j in range(0, j):
-                    cellArray[i][_j].Flip();
+                updateTokensInDirection(i, j, DIR.N)
+                updateTokensInDirection(i, j, DIR.NE)
+                updateTokensInDirection(i, j, DIR.E)
+                updateTokensInDirection(i, j, DIR.SE)
+                updateTokensInDirection(i, j, DIR.S)
+                updateTokensInDirection(i, j, DIR.SV)
+                updateTokensInDirection(i, j, DIR.V)
+                updateTokensInDirection(i, j, DIR.NV)
 
-                # Process N ray
-                # Process E ray
-                # Process S ray
-                # Process V ray
-                
-                # Process NE ray
-                # Process SE ray
-                # Process SV ray
-                # Process NV ray
-                
+                cell.SetColor(CURRENT_PLAYING_COLOR)
 
                 # Last thing to do is switch current color
                 if CURRENT_PLAYING_COLOR == COLOR.WHITE:
@@ -160,7 +248,7 @@ def on_press(key):
         clearUI()
 
 def main():
-    window.setMouseHandler(mouseCallback)
+    window.setMouseHandler(mouseCallback)    
     window.mainloop()
 
 if __name__ == "__main__":
