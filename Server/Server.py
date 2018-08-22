@@ -1,6 +1,8 @@
 from graphics import *
 from enum import Enum
 from pynput import keyboard
+from threading import Thread
+from time import sleep
 
 CELL_SIZE = 80
 PADDING = 10
@@ -56,6 +58,9 @@ class Cell:
     def Undraw(self):
         self.shape.undraw()
 
+    def GetColor(self):
+        return self.color
+
     def SetColor(self, color):
         self.color = color
         if color == COLOR.WHITE:
@@ -100,17 +105,18 @@ def clearUI():
 
     for cell in cells:
         cell.Draw(window)
+
+    # Draw the initial four tokens to allign to
+    cellArray[3][3].SetColor(COLOR.BLACK)
+    cellArray[3][4].SetColor(COLOR.WHITE)
+    cellArray[4][3].SetColor(COLOR.WHITE)
+    cellArray[4][4].SetColor(COLOR.BLACK)
             
 def mouseCallback(clickedPoint):
     global CURRENT_PLAYING_COLOR
     for cell in cells:
             if cell.HasBeenTouched(clickedPoint):
                 cell.SetColor(CURRENT_PLAYING_COLOR)
-
-                if CURRENT_PLAYING_COLOR == COLOR.WHITE:
-                    CURRENT_PLAYING_COLOR = COLOR.BLACK
-                else:
-                    CURRENT_PLAYING_COLOR = COLOR.WHITE
 
                 # Move on all directions to flip the colors
                 i = cell.i
@@ -125,6 +131,27 @@ def mouseCallback(clickedPoint):
                 for _j in range(0, j):
                     cellArray[i][_j].Flip();
 
+                # Process N ray
+                # Process E ray
+                # Process S ray
+                # Process V ray
+                
+                # Process NE ray
+                # Process SE ray
+                # Process SV ray
+                # Process NV ray
+                
+
+                # Last thing to do is switch current color
+                if CURRENT_PLAYING_COLOR == COLOR.WHITE:
+                    CURRENT_PLAYING_COLOR = COLOR.BLACK
+                else:
+                    CURRENT_PLAYING_COLOR = COLOR.WHITE
+
+def render_thread():
+    while True:
+        block = None
+        time.sleep (16.66 / 1000.0);
 
 def on_press(key):
     try: k = key.char
@@ -139,5 +166,7 @@ def main():
 if __name__ == "__main__":
     lis = keyboard.Listener(on_press=on_press)
     lis.start()
+    RenderThread = Thread(target = render_thread, args = ( ))
+    RenderThread.start()
     clearUI()
     main()
